@@ -2,11 +2,13 @@
 #define ALGORITHMDEMO_GRAPH_H
 #include <vector>
 #include <cassert>
+#include "Edge.h"
 
+template <typename WeightType>
 class AdjacencyMatrix
 {
 private:
-    bool **matrix;
+    Edge<WeightType> ***matrix;
     int n;
     int m;
     bool directed;
@@ -16,16 +18,21 @@ public:
         n = count;
         this->directed = directed;
         m = 0;
-        matrix = new bool *[count];
+        matrix = new Edge<WeightType> **[count];
         for(int i = 0; i < count; i++)
         {
-            matrix[i] = new bool[count]();
+            matrix[i] = new Edge<WeightType> *[count];
+            for(int j = 0; j < n; j++)
+                matrix[i][j] = NULL;
         }
     }
     ~AdjacencyMatrix()
     {
         for(int i = 0; i < n; i++)
         {
+            for(int j = 0; j < n; j++)
+                if(NULL != matrix[i][j])
+                    delete matrix[i][j];
             delete [] matrix[i];
         }
         delete [] matrix;
@@ -41,14 +48,20 @@ public:
         return m;
     }
 
-    void addEdge(int p, int q)
+    void addEdge(int p, int q, WeightType w)
     {
         assert(0 <= p && p < n);
         assert(0 <= q && q < n);
 
-        if(hasEdge(p, q)) return;
-        matrix[p][q] = true;
-        if(!directed) matrix[q][p] = true;
+        if(hasEdge(p, q))
+        {
+            delete matrix[p][q];
+            if(!directed) delete matrix[q][p];
+            m--;
+        }
+
+        matrix[p][q] = new Edge<WeightType>(p, q, w);
+        if(!directed) matrix[q][p] = new Edge<WeightType>(q, p, w);
         m++;
     }
 
@@ -56,7 +69,7 @@ public:
     {
         assert(0 <= p && p < n);
         assert(0 <= q && q < n);
-        return matrix[p][q];
+        return matrix[p][q] != NULL;
     }
 
     void show()
@@ -66,7 +79,11 @@ public:
         {
             for(int j = 0; j < n; j++)
             {
-                cout << matrix[i][j] << " ";
+                if(matrix[i][j])
+                    cout << matrix[i][j]->wt();
+                else
+                    cout << "NULL";
+                cout << "\t";
             }
             cout << endl;
         }
@@ -77,16 +94,16 @@ public:
     class Iterator
     {
     private:
-        AdjacencyMatrix &G;
+        AdjacencyMatrix<WeightType> &G;
         int index;
         int node;
     public:
-        Iterator(AdjacencyMatrix &g, int p) : G(g)
+        Iterator(AdjacencyMatrix<WeightType> &g, int p) : G(g)
         {
             index = 0;
             node = p;
         }
-        int begin()
+        Edge<WeightType>* begin()
         {
             index = -1;
             return next();
@@ -95,23 +112,24 @@ public:
         {
             return (index >= G.n);
         }
-        int next()
+        Edge<WeightType>* next()
         {
             index++;
             while(index < G.n)
             {
-                if(G.matrix[node][index]) return index;
+                if(NULL != G.matrix[node][index]) return G.matrix[node][index];
                 index++;
             }
-            return -1;
+            return NULL;
         }
     };
 };
 
+template <typename WeightType>
 class AdjacencyLists
 {
 private:
-    vector<vector<int>> lists;
+    vector<vector<Edge<WeightType>*>> lists;
     int n;
     int m;
     bool directed;
@@ -124,10 +142,15 @@ public:
         
         for(int i = 0; i < count; i++)
         {
-            lists.push_back(vector<int>());
+            lists.push_back(vector<Edge<WeightType>*>());
         }
     }
-    ~AdjacencyLists(){}
+    ~AdjacencyLists()
+    {
+        for(int i = 0; i < lists.size(); i++)
+            for(int j = 0; j < lists[i].size(); j++)
+                delete lists[i][j];
+    }
 
     int V()
     {
@@ -139,14 +162,14 @@ public:
         return m;
     }
 
-    void addEdge(int p, int q)
+    void addEdge(int p, int q, WeightType w)
     {
         assert(0 <= p && p < n);
         assert(0 <= q && q < n);
 
         //if(hasEdge(p, q)) return;     //it spents too much time
-        lists[p].push_back(q);
-        if(p != q && !directed) lists[q].push_back(p);
+        lists[p].push_back(new Edge<WeightType>(p, q, w));
+        if(p != q && !directed) lists[q].push_back(new Edge<WeightType>(q, p, w));
         m++;
     }
 
@@ -156,7 +179,7 @@ public:
         assert(0 <= q && q < n);
         for(int i = 0; i < lists[p].size(); i++)
         {
-            if(q == lists[p][i]) return true;
+            if(q == lists[p][i]->other(p)) return true;
         }
         return false;
     }
@@ -169,7 +192,7 @@ public:
             cout << i << ": ";
             for(int j = 0; j < lists[i].size(); j++)
             {
-                cout << lists[i][j] << " ";
+                cout << *lists[i][j] << "\t";
             }
             cout << endl;
         }
@@ -188,7 +211,7 @@ public:
             index = 0;
             node = p;
         }
-        int begin()
+        Edge<WeightType>* begin()
         {
             index = -1;
             return next();
@@ -197,12 +220,12 @@ public:
         {
             return (index >= G.lists[node].size());
         }
-        int next()
+        Edge<WeightType>* next()
         {
             index++;
             if(index < G.lists[node].size())
                 return G.lists[node][index];
-            return -1;
+            return NULL;
         }
     };
 };

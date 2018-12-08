@@ -11,7 +11,7 @@ using namespace std;
 #define SWITCH_SORT_ALGORITHM_TEST      0
 #define SWITCH_BINARY_SEARCH_TREE_TEST  0
 #define SWITCH_UNION_FIND_TEST          0
-#define SWITCH_GRAPH_ALGORITHM_TEST     0
+#define SWITCH_GRAPH_ALGORITHM_TEST     1
 
 
 int main() 
@@ -73,24 +73,21 @@ int main()
 #endif
 
 #if SWITCH_GRAPH_ALGORITHM_TEST
-    AdjacencyMatrix amGraph(13, false);
-    AdjacencyLists alGraph(7, false);
+    AdjacencyMatrix<double> amGraph(8, false);
+    AdjacencyLists<double> alGraph(8, false);
     string filePath1 = "graph1.txt";
     string filePath2 = "graph2.txt";
-    ReadGraph<AdjacencyMatrix>(amGraph, filePath1);
-    ReadGraph<AdjacencyLists>(alGraph, filePath2);
+    ReadGraph<AdjacencyMatrix<double>, double>(amGraph, filePath1);
+    ReadGraph<AdjacencyLists<double>, double>(alGraph, filePath1);
     amGraph.show();
     alGraph.show();
 
-    GraphAlgorithm::Component<AdjacencyMatrix> amComponent(amGraph);
-    GraphAlgorithm::Component<AdjacencyLists> alComponent(alGraph);
-    cout << "graph1 component: " << amComponent.count() << endl;
-    cout << "graph2 component: " << alComponent.count() << endl;
-
-    GraphAlgorithm::Path<AdjacencyMatrix> amPath(amGraph);
-    amPath.ShowDftPath(0, 6);
-    amPath.ShowBftPath(0, 6);
+    GraphAlgorithm::MinimalSpanningTree::LazyPrim<AdjacencyMatrix<double>, double> amMst(amGraph);
+    cout << "MST edges:" << endl;
+    auto vec = amMst.mstEdges();
+    for(int i = 0; i < vec.size(); i++)
+        cout << vec[i] << endl;
+    cout << "MST result:" << amMst.result() << endl;
 #endif
-
     return 0;
 }

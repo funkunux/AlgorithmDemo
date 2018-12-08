@@ -5,7 +5,7 @@
 #include <string>
 #include <cassert>
 
-template <typename Graph>
+template <typename Graph, typename WeightType>
 class ReadGraph
 {
     Graph &G;
@@ -18,14 +18,15 @@ public:
         assert(getline(file, line));
         stringstream ss(line);
         int V, E, p, q;
+        WeightType w;
         ss >> V >> E;
         assert(V == G.V());
         for(int i = 0; i < E; i++)
         {
             assert(getline(file, line));
             stringstream ss(line);
-            ss >> p >> q;
-            G.addEdge(p, q);
+            ss >> p >> q >> w;
+            G.addEdge(p, q, w);
         }
     }
 

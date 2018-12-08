@@ -4,7 +4,7 @@
 #include <iostream>
 #include <ctime>
 #include "AlgorithmTester.h"
-#include "MaxHeap.h"
+#include "Heap.h"
 
 #define Swap(a, b, t) t __tmp = a; a = b; b = __tmp;
 

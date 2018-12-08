@@ -2,6 +2,7 @@
 #define ALGORITHMDEMO_GRAPHALGORITHM_H
 #include <queue>
 #include <stack>
+#include "Edge.h"
 
 namespace GraphAlgorithm
 {
@@ -20,17 +21,7 @@ namespace GraphAlgorithm
         {
             delete [] visitSet;
         }
-        void DFT(int startNode)
-        {
-            assert(startNode >= 0 && startNodee < graph.V());
-            Graph::Iterator iter(graph, startNode);
-            visitSet[startNode] = true;
-            for(int node = iter.begin(); !iter.end(); node = iter.next())
-            {
-                if(!visitSet[node])
-                    DFT(node);
-            }
-        }
+        virtual void DFT(int startNode){}
     };
 
 
@@ -193,31 +184,69 @@ namespace GraphAlgorithm
         }
     };
 
-    //void BFT(int startNode)   //Breadth-first Traversal
-    //    {
-    //        bool *closeSet = new bool[G.V()]();
-    //        queue<int> q;
-    //        q.push(startNode);
-    //        cout << "BFT start(" << startNode << "): ";
-    //        while(q.size())
-    //        {
-    //            int node = q.front();
-    //            if(!closeSet[node])
-    //            {
-    //                closeSet[node] = true;
-    //                cout << node << " ";
-    //            }
+    namespace MinimalSpanningTree
+    {
+        template <typename Graph, typename WeightType>
+        class MST : public GraphAlgorithm<Graph>        //Minimal Spanning Tree
+        {
+        protected:
+            MinHeap<Edge<WeightType>> heap;
+            vector<Edge<WeightType>> resultVec;
+            WeightType minWeight;
+            virtual void GetMST(){}
+        public:
+            MST(Graph& G) : GraphAlgorithm(G), heap(G.E()) {}
+            vector<Edge<WeightType>> mstEdges()
+            {
+                return resultVec;
+            }
+            WeightType result()
+            {
+                return minWeight;
+            }
+            
+        };
 
-    //            q.pop();
-    //            Graph::Iterator iter(G, node);
-    //            for(int p = iter.begin(); !iter.end(); p = iter.next())
-    //            {
-    //                if(!closeSet[p])
-    //                    q.push(p);
-    //            }
-    //        }
-    //        cout << endl;
-    //    }
+        template <typename Graph, typename WeightType>
+        class LazyPrim : public MST<Graph, WeightType>
+        {
+        private:
+            void GetMST()
+            {
+                int n = 0;
+                visitSet[0] = true;
+                bool done = false;
+                while(true)
+                {
+                    Graph::Iterator iter(graph, n);
+                    for(Edge<WeightType>* e = iter.begin(); !iter.end(); e = iter.next())
+                    {
+                        if(!visitSet[e->q()])
+                            heap.insert(*e);
+                    }
+                    Edge<WeightType> minEdge = heap.extractMin();
+                    while(visitSet[minEdge.q()])
+                    {
+                        if(heap.empty())
+                        {
+                            done = true;
+                            break;
+                        }
+                        minEdge = heap.extractMin();
+                    }
+                    if(done) break;
+                    n = minEdge.q();
+                    visitSet[n] = true;
+                    resultVec.push_back(minEdge);
+                }
+                minWeight = resultVec[0].wt();
+                for(int i = 1; i < resultVec.size(); i++)
+                    minWeight += resultVec[i].wt();
+            }
+        public:
+            LazyPrim(Graph& G) : MST(G) { GetMST(); }
+        };
+    }
 }
 
 

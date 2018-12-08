@@ -1,5 +1,5 @@
-#ifndef ALGORITHMDEMO_MAXHEAP_H
-#define ALGORITHMDEMO_MAXHEAP_H
+#ifndef ALGORITHMDEMO_HEAP_H
+#define ALGORITHMDEMO_HEAP_H
 
 #include <stdio.h>
 #include <iostream>
@@ -142,6 +142,90 @@ public:
         printf("\n");
     }
 };
+
+template <typename T>
+class MinHeap
+{
+private:
+    T *arr;
+    int cap;
+    int count;
+public:
+    MinHeap(int n)
+    {
+        assert(n > 0);
+        arr = new T[n];
+        cap = n;
+        count = 0;
+    }
+    int size()
+    {
+        return count;
+    }
+    int capacity()
+    {
+        return cap;
+    }
+    bool empty()
+    {
+        return (0 == count);
+    }
+
+    void insert(T val)
+    {
+        assert(count < cap);
+        arr[count] = val;
+        shiftUp(count++);
+    }
+
+    void shiftUp(int node)
+    {
+        assert(0 <= node && count > node);
+        
+        int n = node;
+        T val = arr[node];
+        while(n > 0)
+        {
+            int p = (n - 1) / 2;
+            if(arr[p] > val)
+                arr[n] = arr[p];
+            else
+                break;
+            n = p;
+        }
+        arr[n] = val;
+    }
+
+    T extractMin()
+    {
+        assert(count > 0);
+        T rtlVal = arr[0];
+        arr[0] = arr[count - 1];
+        shiftDown(0);
+        count--;
+        return rtlVal;
+    }
+
+    void shiftDown(int node)
+    {
+        assert(node >= 0 && node < count);
+        int n = node;
+        int s = n * 2 + 1;
+        T val = arr[node];
+        while(s < count)
+        {
+            if(s + 1 < count && arr[s] > arr[s + 1]) s++;
+            if(arr[s] < val)
+                arr[n] = arr[s];
+            else
+                break;
+            n = s;
+            s = s * 2 + 1;
+        }
+        arr[n] = val;
+    }
+};
+
 
 
 #endif
