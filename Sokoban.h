@@ -1,0 +1,6 @@
+#ifndef ALGORITHMDEMO_SOKOBAN_H
+#define ALGORITHMDEMO_SOKOBAN_H
+
+//TODO
+
+#endif
