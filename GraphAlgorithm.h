@@ -11,15 +11,15 @@ namespace GraphAlgorithm
     {
     protected:
         Graph &graph;
-        bool *visitSet;
+        bool *visited;
 
         GraphAlgorithm(Graph &g) : graph(g)
         {
-            visitSet = new bool[graph.V()]();
+            visited = new bool[graph.V()]();
         }
         virtual ~GraphAlgorithm()
         {
-            delete [] visitSet;
+            delete [] visited;
         }
         virtual void DFT(int startNode){}
     };
@@ -38,7 +38,7 @@ namespace GraphAlgorithm
             ccount = 0;
             for(int i = 0; i < graph.V(); i++)
             {
-                if(!visitSet[i])
+                if(!visited[i])
                 {
                     DFT(i);
                     ccount++;
@@ -64,11 +64,11 @@ namespace GraphAlgorithm
         {
             assert(startNode >= 0 && startNode < graph.V());
             Graph::Iterator iter(graph, startNode);
-            visitSet[startNode] = true;
+            visited[startNode] = true;
             pool[startNode] = ccount + 1;
             for(int node = iter.begin(); !iter.end(); node = iter.next())
             {
-                if(!visitSet[node])
+                if(!visited[node])
                     DFT(node);
             }
         }
@@ -106,23 +106,23 @@ namespace GraphAlgorithm
         void init()
         {
             assert(NULL != from);
-            assert(NULL != visitSet);
+            assert(NULL != visited);
             for(int i = 0; i < graph.V(); i++)
             {
                 from[i] = -1;
-                visitSet[i] = false;
+                visited[i] = false;
             }
         }
         void DFT(int startNode, int targetNode)
         {
             assert(startNode >= 0 && startNode < graph.V());
             assert(targetNode >= 0 && targetNode < graph.V());
-            visitSet[startNode] = true;
+            visited[startNode] = true;
             if(startNode == targetNode) return;
             Graph::Iterator iter(graph, startNode);
             for(int node = iter.begin(); !iter.end(); node = iter.next())
             {
-                if(!visitSet[node] )
+                if(!visited[node] )
                 {
                     from[node] = startNode;
                     DFT(node, targetNode);
@@ -137,7 +137,7 @@ namespace GraphAlgorithm
             queue<int> q;
             int node;
             q.push(startNode);
-            visitSet[startNode] = true;
+            visited[startNode] = true;
 
             while(q.size())
             {
@@ -148,10 +148,10 @@ namespace GraphAlgorithm
                 for(int tmp = iter.begin(); !iter.end(); tmp = iter.next())
                 {
                     
-                    if(!visitSet[tmp] )
+                    if(!visited[tmp] )
                     {
                         from[tmp] = node;
-                        visitSet[tmp] = true;
+                        visited[tmp] = true;
                         q.push(tmp);
                     }
                 }
@@ -160,7 +160,7 @@ namespace GraphAlgorithm
 
         void ShowPath(int s, int t)
         {
-            if(!visitSet[t])
+            if(!visited[t])
             {
                 cout << "No path to node " << t << "." << endl;
                 return;
@@ -210,34 +210,29 @@ namespace GraphAlgorithm
         template <typename Graph, typename WeightType>
         class LazyPrim : public MST<Graph, WeightType>
         {
-        private:
+        protected:
+            void visit(int node)
+            {
+                assert(!visited[node]);
+                Graph::Iterator iter(graph, node);
+                for(auto e = iter.begin(); !iter.end(); e = iter.next())
+                {
+                    if(!visited[e->other(node)])
+                        heap.insert(*e);
+                }
+                visited[node] = true;
+            }
+
             void GetMST()
             {
-                int n = 0;
-                visitSet[0] = true;
-                bool done = false;
-                while(true)
+                visit(0);
+                while(!heap.empty())
                 {
-                    Graph::Iterator iter(graph, n);
-                    for(Edge<WeightType>* e = iter.begin(); !iter.end(); e = iter.next())
-                    {
-                        if(!visitSet[e->q()])
-                            heap.insert(*e);
-                    }
-                    Edge<WeightType> minEdge = heap.extractMin();
-                    while(visitSet[minEdge.q()])
-                    {
-                        if(heap.empty())
-                        {
-                            done = true;
-                            break;
-                        }
-                        minEdge = heap.extractMin();
-                    }
-                    if(done) break;
-                    n = minEdge.q();
-                    visitSet[n] = true;
-                    resultVec.push_back(minEdge);
+                    auto e = heap.extractMin();
+                    if(visited[e.p()] == visited[e.q()])
+                        continue;
+                    resultVec.push_back(e);
+                    visit(e.q());
                 }
                 minWeight = resultVec[0].wt();
                 for(int i = 1; i < resultVec.size(); i++)
@@ -245,6 +240,70 @@ namespace GraphAlgorithm
             }
         public:
             LazyPrim(Graph& G) : MST(G) { GetMST(); }
+        };
+
+        template <typename Graph, typename WeightType>
+        class Prim : public MST<Graph, WeightType>
+        {
+        private:
+            void visit(int node)
+            {
+                assert(!visited[node]);
+                Graph::Iterator iter(graph, node);
+                //cout << "node:" << node << endl;
+                for(auto e = iter.begin(); !iter.end(); e = iter.next())
+                {
+                    int other = e->other(node);
+                    if(!visited[other])
+                    {
+                        //cout << "e:" << *e  << endl;
+                        //if(edgeTo[other]) cout << "other" << other << ":" << *edgeTo[other] << endl;
+                        if(NULL == edgeTo[other] || *edgeTo[other] > *e)
+                        {
+                            edgeTo[other] = e;
+                        }
+                        else if(*edgeTo[other] < *e)
+                        {
+                            //cout << "continue" << endl;
+                            continue;
+                        }
+
+                        heap.insert(*e);
+                    }
+
+                }
+                visited[node] = true;
+            }
+
+            void GetMST()
+            {
+                visit(0);
+                while(!heap.empty())
+                {
+                    auto e = heap.extractMin();
+                    if(visited[e.p()] == visited[e.q()])
+                    {
+                        //cout << "after visit, continue:" << e << endl;
+                        continue;
+                    }
+                    resultVec.push_back(e);
+                    visit(e.q());
+                }
+                if(resultVec.size()) minWeight = resultVec[0].wt();
+                for(int i = 1; i < resultVec.size(); i++)
+                    minWeight += resultVec[i].wt();
+            }
+
+            vector<Edge<WeightType>*> edgeTo;
+        public:
+            Prim(Graph& G) : MST(G) 
+            {
+                for(int i = 0; i < G.V(); i++)
+                    edgeTo.push_back(NULL);
+                GetMST(); 
+            }
+            ~Prim(){}
+
         };
     }
 }

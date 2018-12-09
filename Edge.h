@@ -35,7 +35,7 @@ public:
     int other(int i) const
     {
         assert(i == a || i == b);
-        return i == a ? a : b;
+        return i == a ? b : a;
     }
     int p()
     {

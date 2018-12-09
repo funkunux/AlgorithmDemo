@@ -73,21 +73,40 @@ int main()
 #endif
 
 #if SWITCH_GRAPH_ALGORITHM_TEST
-    AdjacencyMatrix<double> amGraph(8, false);
-    AdjacencyLists<double> alGraph(8, false);
-    string filePath1 = "graph1.txt";
-    string filePath2 = "graph2.txt";
+    clock_t start, end;
+    AdjacencyMatrix<double> amGraph(10000, false);
+    AdjacencyLists<double> alGraph(10000, false);
+    string filePath1 = "testG4.txt";
+    string filePath2 = "graph1.txt";
+    start = clock();
     ReadGraph<AdjacencyMatrix<double>, double>(amGraph, filePath1);
-    ReadGraph<AdjacencyLists<double>, double>(alGraph, filePath1);
-    amGraph.show();
-    alGraph.show();
+    end = clock();
+    cout << "AdjacencyMatrix read from file done! Cost " << ((double)(end - start) / CLOCKS_PER_SEC) << "s" << endl;
 
-    GraphAlgorithm::MinimalSpanningTree::LazyPrim<AdjacencyMatrix<double>, double> amMst(amGraph);
-    cout << "MST edges:" << endl;
-    auto vec = amMst.mstEdges();
-    for(int i = 0; i < vec.size(); i++)
-        cout << vec[i] << endl;
-    cout << "MST result:" << amMst.result() << endl;
+    start = clock();
+    ReadGraph<AdjacencyLists<double>, double>(alGraph, filePath1);
+    end = clock();
+    cout << "AdjacencyLists read from file done! Cost " << ((double)(end - start) / CLOCKS_PER_SEC) << "s" << endl;
+
+    start = clock();
+    GraphAlgorithm::MinimalSpanningTree::LazyPrim<AdjacencyMatrix<double>, double> amMstLz(amGraph);
+    end = clock();
+    cout << "AdjacencyMatrix MST by LazyPrim result:" << amMstLz.result() << " Cost:" << (double)(end - start) / CLOCKS_PER_SEC << endl;
+
+    start = clock();
+    GraphAlgorithm::MinimalSpanningTree::LazyPrim<AdjacencyLists<double>, double> alMstLz(alGraph);
+    end = clock();
+    cout << "AdjacencyLists MST by LazyPrim result:" << alMstLz.result() << " Cost:" << (double)(end - start) / CLOCKS_PER_SEC << endl;
+
+    start = clock();
+    GraphAlgorithm::MinimalSpanningTree::Prim<AdjacencyMatrix<double>, double> amMst(amGraph);
+    end = clock();
+    cout << "AdjacencyMatrix MST by Prim result:" << amMst.result() << " Cost:" << (double)(end - start) / CLOCKS_PER_SEC << endl;
+
+    start = clock();
+    GraphAlgorithm::MinimalSpanningTree::Prim<AdjacencyLists<double>, double> alMst(alGraph);
+    end = clock();
+    cout << "AdjacencyLists MST by Prim result:" << alMst.result() << " Cost:" << (double)(end - start) / CLOCKS_PER_SEC << endl;
 #endif
     return 0;
 }
