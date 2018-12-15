@@ -72,8 +72,8 @@ int main()
     AlgorithmTester::UnionFindTestSuit(10000000);
 #endif
 
-#if SWITCH_GRAPH_ALGORITHM_TEST
     clock_t start, end;
+#if SWITCH_GRAPH_ALGORITHM_TEST
     AdjacencyMatrix<double> amGraph(10000, false);
     AdjacencyLists<double> alGraph(10000, false);
     string filePath1 = "testG4.txt";
@@ -108,5 +108,39 @@ int main()
     end = clock();
     cout << "AdjacencyLists MST by Prim result:" << alMst.result() << " Cost:" << (double)(end - start) / CLOCKS_PER_SEC << endl;
 #endif
+
+    string testG4 = "testG4.txt";
+    AdjacencyLists<double> alGraph_testG4(10000, true);
+    ReadGraph<AdjacencyLists<double>, double>(alGraph_testG4, testG4);
+    start = clock();
+    GraphAlgorithm::FKHSP<AdjacencyLists<double>, double> fkhsp_testG4(alGraph_testG4, 0);
+    end = clock();
+    cout << "FKHSP Cost:" << (double)(end - start) / CLOCKS_PER_SEC << endl;
+    fkhsp_testG4.showPathTo(3757);
+
+    start = clock();
+    GraphAlgorithm::BellmanFord<AdjacencyLists<double>, double> BellmanFord_testG4(alGraph_testG4, 0);
+    end = clock();
+    cout << "BellmanFord Cost:" << (double)(end - start) / CLOCKS_PER_SEC << endl;
+    BellmanFord_testG4.showPathTo(3757);
+
+    cout << endl;
+    string testG6 = "testG6.txt";
+    AdjacencyLists<int> alGraph_testG6(5, true);
+    ReadGraph<AdjacencyLists<int>, int>(alGraph_testG6, testG6);
+    GraphAlgorithm::FKHSP<AdjacencyLists<int>, int> fkhsp_testG6(alGraph_testG6, 0);
+    for(int i = 1; i < alGraph_testG6.V(); i++)
+    {
+        fkhsp_testG6.showPathTo(i);
+    }
+
+    cout << endl;
+    GraphAlgorithm::BellmanFord<AdjacencyLists<int>, int> BellmanFord_testG6(alGraph_testG6, 0);
+    for(int i = 1; i < alGraph_testG6.V(); i++)
+    {
+        BellmanFord_testG6.showPathTo(i);
+    }
+
+
     return 0;
 }

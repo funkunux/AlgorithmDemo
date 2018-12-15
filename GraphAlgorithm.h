@@ -147,7 +147,7 @@ namespace GraphAlgorithm
                 Graph::Iterator iter(graph, node);
                 for(int tmp = iter.begin(); !iter.end(); tmp = iter.next())
                 {
-                    
+
                     if(!visited[tmp] )
                     {
                         from[tmp] = node;
@@ -204,7 +204,7 @@ namespace GraphAlgorithm
             {
                 return minWeight;
             }
-            
+
         };
 
         template <typename Graph, typename WeightType>
@@ -306,6 +306,213 @@ namespace GraphAlgorithm
 
         };
     }
+
+    template<typename Graph, typename WeightType>
+    class FKHSP
+    {
+    private:
+        Graph& graph;
+        bool *visited;
+        int *from;
+        WeightType *distTo;
+        bool hasNegativeCircle;
+
+        void DFT(int node)
+        {
+            //cout << "visit node " << node << endl;
+            if(visited[node] || hasNegativeCircle) 
+            {
+                hasNegativeCircle = true;
+                return;
+            }
+            else visited[node] = true;
+
+            Graph::Iterator iter(graph, node);
+            for(auto e = iter.begin(); !iter.end(); e = iter.next())
+            {
+                int other = e->other(node);
+                if(-1 == from[other] || distTo[other] > distTo[node] + e->wt())
+                {
+                    from[other] = node;
+                    distTo[other] = distTo[node] + e->wt();
+                    DFT(other);
+                }
+            }
+            visited[node] = false;
+        }
+    public:
+        FKHSP(Graph& g, int start) : graph(g)
+        {
+            visited = new bool[g.V()]();
+            from = new int[g.V()];
+            distTo = new WeightType[g.V()];
+            hasNegativeCircle = false;
+            for(int i = 0; i < g.V(); i++)
+            {
+                from[i] = -1;
+            }
+            from[start] = start;
+            distTo[start] = WeightType();
+            DFT(start);
+        }
+        ~FKHSP()
+        {
+            delete [] visited;
+            delete [] from;
+            delete [] distTo;
+        }
+
+        bool hasPathTo(int node)
+        {
+            assert(node >= 0 && node < graph.V());
+            return from[node] != -1;
+        }
+        WeightType distanceTo(int node)
+        {
+            assert(hasPathTo(node));
+            return distTo[node];
+        }
+        void showPathTo(int node)
+        {
+            if(!hasPathTo(node))
+            {
+                cout << "No path to node " << node << "!" << endl;
+                return;
+            }
+            if(hasNegativeCircle)
+            {
+                cout << "Error: There is negative circle in this graph!" << endl;
+                return;
+            }
+            stack<int> s;
+            int pre = node;
+            while(pre != from[pre])
+            {
+                s.push(pre);
+                pre = from[pre];
+            }
+            s.push(pre);
+
+
+            cout << "Path to node " << node << " (Distance: " << distTo[node] << "): ";
+            while(!s.empty())
+            {
+                cout << s.top() << " ";
+                s.pop();
+            }
+            cout << endl;
+        }
+    };
+
+    template<typename Graph, typename WeightType>
+    class BellmanFord
+    {
+    private:
+        Graph& graph;
+        int *from;
+        WeightType *distTo;
+        bool hasNegativeCircle;
+
+        void run(int node)
+        {
+            for(int pass = 1; pass < graph.V(); pass++)
+            {
+                for(int i = 0; i < graph.V(); i++)
+                {
+                    if(-1 == from[i]) continue;
+                    Graph::Iterator iter(graph, i);
+                    for(auto e = iter.begin(); !iter.end(); e = iter.next())
+                    {
+                        int other = e->other(i);
+                        if(-1 == from[other] || distTo[other] > distTo[i] + e->wt())
+                        {
+                            from[other] = i;
+                            distTo[other] = distTo[i] + e->wt();
+                        }
+                    }
+                }
+            }
+            hasNegativeCircle = checkNegativeCircle();
+        }
+
+        bool checkNegativeCircle()
+        {
+            for(int i = 0; i < graph.V(); i++)
+            {
+                if(-1 == from[i]) continue;
+                Graph::Iterator iter(graph, i);
+                for(auto e = iter.begin(); !iter.end(); e = iter.next())
+                {
+                    int other = e->other(i);
+                    if(-1 == from[other] || distTo[other] > distTo[i] + e->wt())
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+    public:
+        BellmanFord(Graph& g, int start) : graph(g)
+        {
+            from = new int[g.V()];
+            distTo = new WeightType[g.V()];
+            hasNegativeCircle = false;
+            for(int i = 0; i < g.V(); i++)
+            {
+                from[i] = -1;
+            }
+            from[start] = start;
+            distTo[start] = WeightType();
+            run(start);
+        }
+        ~BellmanFord()
+        {
+            delete [] from;
+            delete [] distTo;
+        }
+
+        bool hasPathTo(int node)
+        {
+            assert(node >= 0 && node < graph.V());
+            return from[node] != -1;
+        }
+        WeightType distanceTo(int node)
+        {
+            assert(hasPathTo(node));
+            return distTo[node];
+        }
+        void showPathTo(int node)
+        {
+            if(!hasPathTo(node))
+            {
+                cout << "No path to node " << node << "!" << endl;
+                return;
+            }
+            if(hasNegativeCircle)
+            {
+                cout << "Error: There is negative circle in this graph!" << endl;
+                return;
+            }
+            stack<int> s;
+            int pre = node;
+            while(pre != from[pre])
+            {
+                s.push(pre);
+                pre = from[pre];
+            }
+            s.push(pre);
+
+
+            cout << "Path to node " << node << " (Distance: " << distTo[node] << "): ";
+            while(!s.empty())
+            {
+                cout << s.top() << " ";
+                s.pop();
+            }
+            cout << endl;
+        }
+    };
 }
 
 
