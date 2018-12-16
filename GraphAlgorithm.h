@@ -513,6 +513,32 @@ namespace GraphAlgorithm
             cout << endl;
         }
     };
+
+    template<typename Graph>
+    class GenerateRandomGraph
+    {
+    private:
+        Graph& graph;
+    public:
+        GenerateRandomGraph(Graph& g) : graph(g)
+        {
+            int size = graph.V();
+            srand(time(NULL) + clock());
+            for(int i = 0; i < size; i++)
+            {
+                if(i != size - 1)
+                    graph.addEdge(i, i + 1, rand() % 100);
+                else
+                    graph.addEdge(i, 0, rand() % 100);
+                for(int j = 0; j < size / 100 + 1; j++)
+                {
+                    graph.addEdge(i, rand() % size, rand() % 100);
+                }
+            }
+        }
+    };
+
+
 }
 
 

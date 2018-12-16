@@ -11,7 +11,7 @@ using namespace std;
 #define SWITCH_SORT_ALGORITHM_TEST      0
 #define SWITCH_BINARY_SEARCH_TREE_TEST  0
 #define SWITCH_UNION_FIND_TEST          0
-#define SWITCH_GRAPH_ALGORITHM_TEST     1
+#define SWITCH_GRAPH_ALGORITHM_TEST     0
 
 
 int main() 
@@ -107,40 +107,23 @@ int main()
     GraphAlgorithm::MinimalSpanningTree::Prim<AdjacencyLists<double>, double> alMst(alGraph);
     end = clock();
     cout << "AdjacencyLists MST by Prim result:" << alMst.result() << " Cost:" << (double)(end - start) / CLOCKS_PER_SEC << endl;
-#endif
 
-    string testG4 = "testG4.txt";
-    AdjacencyLists<double> alGraph_testG4(10000, true);
-    ReadGraph<AdjacencyLists<double>, double>(alGraph_testG4, testG4);
+    AdjacencyLists<int> alGraph_random(1000, true);
+    GraphAlgorithm::GenerateRandomGraph<AdjacencyLists<int>> a(alGraph_random);
     start = clock();
-    GraphAlgorithm::FKHSP<AdjacencyLists<double>, double> fkhsp_testG4(alGraph_testG4, 0);
+    GraphAlgorithm::FKHSP<AdjacencyLists<int>, int> fkhsp_random(alGraph_random, 0);
     end = clock();
     cout << "FKHSP Cost:" << (double)(end - start) / CLOCKS_PER_SEC << endl;
-    fkhsp_testG4.showPathTo(3757);
 
     start = clock();
-    GraphAlgorithm::BellmanFord<AdjacencyLists<double>, double> BellmanFord_testG4(alGraph_testG4, 0);
+    GraphAlgorithm::BellmanFord<AdjacencyLists<int>, int> BellmanFord_random(alGraph_random, 0);
     end = clock();
     cout << "BellmanFord Cost:" << (double)(end - start) / CLOCKS_PER_SEC << endl;
-    BellmanFord_testG4.showPathTo(3757);
-
-    cout << endl;
-    string testG6 = "testG6.txt";
-    AdjacencyLists<int> alGraph_testG6(5, true);
-    ReadGraph<AdjacencyLists<int>, int>(alGraph_testG6, testG6);
-    GraphAlgorithm::FKHSP<AdjacencyLists<int>, int> fkhsp_testG6(alGraph_testG6, 0);
-    for(int i = 1; i < alGraph_testG6.V(); i++)
+    for(int i = 0; i < alGraph_random.V(); i++)
     {
-        fkhsp_testG6.showPathTo(i);
+        if(fkhsp_random.distanceTo(i) != BellmanFord_random.distanceTo(i))
+            cout << "Distance to " << i << ":Unknown error!" << endl;
     }
-
-    cout << endl;
-    GraphAlgorithm::BellmanFord<AdjacencyLists<int>, int> BellmanFord_testG6(alGraph_testG6, 0);
-    for(int i = 1; i < alGraph_testG6.V(); i++)
-    {
-        BellmanFord_testG6.showPathTo(i);
-    }
-
-
+#endif
     return 0;
 }
